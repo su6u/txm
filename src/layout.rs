@@ -205,8 +205,9 @@ impl RenderNode {
 
     pub fn both_scripts(base: &Self, sub: &Self, sup: &Self) -> Self {
         let sup_h = sup.height;
+        let sub_h = sub.height;
         let sub_y = base.baseline + 1;
-        let height = (sup_h + base.height).max(sub_y + sub.height);
+        let height = sup_h + sub_h + base.height;
         let width = base.width + sub.width.max(sup.width);
         let baseline = base.baseline + sup_h;
 
@@ -255,14 +256,14 @@ impl RenderNode {
 
         data[0] = tl;
         data[w - 1] = tr;
-        data[(h - 1) * w ] = bl;
+        data[(h - 1) * w] = bl;
         data[(h - 1) * w + w - 1] = br;
 
         for y in 1..h - 1 {
             if left == '{' && y == baseline {
                 data[y * w] = '⎨';
             } else {
-                data[y * w ] = mid_l;
+                data[y * w] = mid_l;
             }
             if right == '}' && y == baseline {
                 data[y * w + w - 1] = '⎬';
@@ -299,27 +300,23 @@ impl RenderNode {
     }
 
     pub fn sqrt_inner(inner: &Self) -> Self {
-        if inner.height == 1 {
-            let mut result = Self::new(inner.width + 1, 1, 0);
-            result.data[0] = '√';
-            inner.blit_into(&mut result.data, result.width, 1, 0);
-            return result;
-        }
-
         let h = inner.height + 1;
-        let w = inner.width + 2;
+        let w = inner.width + 3;
         let baseline = inner.baseline + 1;
 
         let mut data = vec![' '; w * h];
-        inner.blit_into(&mut data, w, 2, 1);
+        inner.blit_into(&mut data, w, 3, 1);
 
-        data[w + 1] = '┌';
+        data[1] = '┌';
+
         for x in 2..w {
-            data[w + x] = '─';
+            data[x] = '─';
         }
+
         for y in 1..h {
             data[y * w + 1] = '│';
         }
+
         data[(h - 1) * w] = '╲';
 
         Self {

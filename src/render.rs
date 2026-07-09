@@ -76,6 +76,17 @@ pub fn render(expr: &Expr, reg: &SymbolRegistry, ctx: &mut RenderCtx) -> RenderN
             RenderNode::infix(&lhs, op_char, &rhs)
         }
 
+        Expr::Escape(s) => {
+            match s.as_str() {
+                " " => RenderNode::new(4, 1, 0),
+                "," => RenderNode::new(1, 1, 0),
+                ":" => RenderNode::new(2, 1, 0),
+                ";" => RenderNode::new(3, 1, 0),
+                "!" => RenderNode::new(0, 1, 0),
+                _ => RenderNode::from_str(s),
+            }
+        }
+
         Expr::Juxtapose(exprs) => {
             let nodes: Vec<RenderNode> = exprs.iter().map(|e| render(e, reg, ctx)).collect();
             RenderNode::hstack(&nodes, 0)

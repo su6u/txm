@@ -84,7 +84,7 @@ impl<'a> Parser<'a> {
         | Some(Token::Number(_))
         | Some(Token::Ident(_))
         | Some(Token::Command(_))
-        | Some(Token::CtrlSym(_))
+        | Some(Token::Escape(_))
         | Some(Token::Bang) = self.peek()
         {
             exprs.push(self.parse_scripted()?);
@@ -170,10 +170,10 @@ impl<'a> Parser<'a> {
                 self.advance();
                 self.parse_command(&name)
             }
-            Some(Token::CtrlSym(s)) => {
+            Some(Token::Escape(s)) => {
                 let s = s.clone();
                 self.advance();
-                Ok(Expr::Ident(s))
+                Ok(Expr::Escape(s))
             }
             Some(Token::Pipe) => {
                 self.advance();

@@ -65,6 +65,7 @@ fn build_registry() -> SymbolRegistry {
         r.register(*name, TextGlyph(name));
     }
 
+    r.register("binom", BinomGlyph);
     r.register("frac", FracGlyph);
     r.register("sqrt", SqrtGlyph);
 
@@ -137,13 +138,16 @@ fn build_registry() -> SymbolRegistry {
     r
 }
 
+// BUG: can't write empty braces
+
 fn main() {
     let reg = build_registry();
 
     let examples = [
+        r"\tan^{-1}(\frac{\sqrt{(-L_1^2 + 2 L_1 \cdot L_2 - L_2^2 + X_effector^2 + Y_effector^2)(L_1^2 + 2L_1\cdot L_2 + L_2^2- X_effector^2-Y_effector^2)}}{-L_1^2 + 2L_1\cdot L_2 - L_2^2 + X_effector^2 + Y_effector^2})",
         r"f(x) = f(a) + f'(a)(x - a) + \frac{f''(a)}{2!}(x - a)^2 + \frac{f'''(a)}{3!}(x - a)^3+\dots",
         r"\frac{d}{dx}\quad\sin^{-1}(\frac{x}{a}) = \frac{1}{\sqrt{a^2 - x^2}}",
-        r"f(x) = \int\ f'(x)\ dx"
+        r"(x+y)^n = \binom{n}{0} x^n + \binom{n}{1} x^{n-1}\, y+\binom{n}{2} x^{n-2}\,y^2 + \dots + \binom{n}{n} y^n",
     ];
 
     for input in &examples {

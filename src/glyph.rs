@@ -18,7 +18,7 @@ pub trait Glyph: Debug {
     }
 
     fn render(&self, args: &[RenderNode], _opts: &[RenderNode], _ctx: &mut RenderCtx)
-        -> RenderNode;
+    -> RenderNode;
 }
 
 pub struct SymbolRegistry {
@@ -66,6 +66,25 @@ impl Glyph for TextGlyph {
         _ctx: &mut RenderCtx,
     ) -> RenderNode {
         RenderNode::from_str(self.0)
+    }
+}
+
+#[derive(Debug)]
+pub struct BinomGlyph;
+
+impl Glyph for BinomGlyph {
+    fn required_args(&self) -> usize {
+        2
+    }
+
+    fn render(
+        &self,
+        args: &[RenderNode],
+        _opts: &[RenderNode],
+        _ctx: &mut RenderCtx,
+    ) -> RenderNode {
+        let inner = RenderNode::vstack(&args[0], &args[1], ' ', 0);
+        RenderNode::stretchy_delim(&inner, '(', ')')
     }
 }
 

@@ -13,6 +13,7 @@ pub enum Expr {
     Prime(Box<Expr>, usize),
     BinOp(Box<Expr>, BinOp, Box<Expr>),
     Juxtapose(Vec<Expr>),
+    Escape(String),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

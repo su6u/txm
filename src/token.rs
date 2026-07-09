@@ -51,7 +51,7 @@ pub enum Token {
     Command(String),
 
     #[regex(r"\\[^a-zA-Z]", |lex| lex.slice()[1..].to_string())]
-    CtrlSym(String),
+    Escape(String),
 
     #[regex(r"[0-9]+", |lex| lex.slice().to_string())]
     Number(String),
