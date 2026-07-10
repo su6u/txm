@@ -12,6 +12,9 @@ mod parser;
 mod render;
 mod token;
 
+const UNIFORM_FRACTION_HEIGHT: bool = false;
+const COMPACT_SIMPLE_FRACTIONAL_EXPONENTS: bool = false;
+
 fn build_registry() -> SymbolRegistry {
     let mut r = SymbolRegistry::new();
 
@@ -178,6 +181,21 @@ fn render_boxed(input: &str, reg: &SymbolRegistry) {
         box_data[y * w] = '│';
         box_data[y * w + w - 1] = '│';
     }
+
+    // box_data[0] = '┌';
+    // box_data[w - 1] = '┐';
+    // box_data[(h - 1) * w] = '└';
+    // box_data[(h - 1) * w + w - 1] = '┘';
+    //
+    // for x in 1..w - 1 {
+    //     box_data[x] = '─';
+    //     box_data[(h - 1) * w + x] = '─';
+    // }
+    //
+    // for y in 1..h - 1 {
+    //     box_data[y * w] = '│';
+    //     box_data[y * w + w - 1] = '│';
+    // }
 
     layout.blit_into(&mut box_data, w, 2, 2);
 

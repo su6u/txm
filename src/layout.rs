@@ -93,19 +93,39 @@ impl RenderNode {
         }
     }
 
-    pub fn vstack(top: &Self, bottom: &Self, line_char: char, pad: usize) -> Self {
+    /// if uniform_height is true, the top and bottom elements will take the same height
+    pub fn vstack(
+        top: &Self,
+        bottom: &Self,
+        line_char: char,
+        pad: usize,
+        uniform_height: bool,
+    ) -> Self {
+        let max_height = top.height.max(bottom.height);
         let inner_w = top.width.max(bottom.width);
         let w = inner_w + 2 * pad;
-        let h = top.height + 1 + bottom.height;
+        let h = if uniform_height {
+            2 * max_height
+        } else {
+            top.height + bottom.height
+        } + 1;
+
         let baseline = top.height;
-
         let mut data = vec![' '; w * h];
-
         let top_x = pad + (inner_w.saturating_sub(top.width)) / 2;
-        top.blit_into(&mut data, w, top_x, 0);
 
-        let bot_x = pad + (inner_w.saturating_sub(bottom.width)) / 2;
-        bottom.blit_into(&mut data, w, bot_x, baseline + 1);
+        if uniform_height {
+            let y = (max_height - top.height) / 2;
+            top.blit_into(&mut data, w, top_x, y);
+
+            let y_shift = (max_height - bottom.height) / 2;
+            let bot_x = pad + (inner_w.saturating_sub(bottom.width)) / 2;
+            bottom.blit_into(&mut data, w, bot_x, baseline + 1 + y_shift);
+        } else {
+            top.blit_into(&mut data, w, top_x, 0);
+            let bot_x = pad + (inner_w.saturating_sub(bottom.width)) / 2;
+            bottom.blit_into(&mut data, w, bot_x, baseline + 1);
+        }
 
         for x in 0..w {
             data[baseline * w + x] = line_char;

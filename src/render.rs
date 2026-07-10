@@ -2,8 +2,6 @@ use crate::ast::*;
 use crate::glyph::{RenderCtx, SymbolRegistry};
 use crate::layout::RenderNode;
 
-const COMPACT_SIMPLE_FRACTIONAL_EXPONENTS: bool = false;
-
 pub fn render(expr: &Expr, reg: &SymbolRegistry, ctx: &mut RenderCtx) -> RenderNode {
     match expr {
         Expr::Ident(s) | Expr::Number(s) => RenderNode::from_str(s),
@@ -152,7 +150,7 @@ fn render_power(
     reg: &SymbolRegistry,
     ctx: &mut RenderCtx,
 ) -> RenderNode {
-    if COMPACT_SIMPLE_FRACTIONAL_EXPONENTS
+    if crate::COMPACT_SIMPLE_FRACTIONAL_EXPONENTS
         && let Expr::Command { name, args } = exp
         && name == "frac"
         && args.len() == 2

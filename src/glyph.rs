@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::fmt::Debug;
 
+use crate::UNIFORM_FRACTION_HEIGHT;
 use crate::layout::RenderNode;
 
 #[derive(Debug, Default, Clone, Copy)]
@@ -109,7 +110,7 @@ impl Glyph for BinomGlyph {
         _opts: &[RenderNode],
         _ctx: &mut RenderCtx,
     ) -> RenderNode {
-        let inner = RenderNode::vstack(&args[0], &args[1], ' ', 0);
+        let inner = RenderNode::vstack(&args[0], &args[1], ' ', 0, UNIFORM_FRACTION_HEIGHT);
         RenderNode::stretchy_delim(&inner, '(', ')', false)
     }
 }
@@ -124,7 +125,7 @@ impl Glyph for FracGlyph {
 
     fn render(&self, args: &[RenderNode], _opts: &[RenderNode], ctx: &mut RenderCtx) -> RenderNode {
         let pad = if ctx.depth == 0 { 1 } else { 0 };
-        RenderNode::vstack(&args[0], &args[1], '─', pad)
+        RenderNode::vstack(&args[0], &args[1], '─', pad, UNIFORM_FRACTION_HEIGHT)
     }
 }
 
@@ -174,45 +175,45 @@ impl Glyph for IntegralGlyph {
         1
     }
 
-fn render(
-    &self,
-    args: &[RenderNode],
-    _opts: &[RenderNode],
-    _ctx: &mut RenderCtx,
-) -> RenderNode {
-    // Render a fixed-length integral symbol
-    if args.is_empty() {
-        RenderNode {
-            width: 2, // symbol + space
-            height: 3,
-            baseline: 1,
-            data: vec!['⎛', ' ', '⎟', ' ', '⎠', ' '],
-        }
-    } else {
-        // no stretching required
-        if args[0].height <= 3 {
-            let w = args[0].width + 2; // symbol + space
-            let mut data = vec![' '; w * 3];
-
-            data[0] = '⎛';
-            data[w] = '⎟';
-            data[2 * w] = '⎠';
-
-            // center one-liner expressions
-            let y = if args[0].height == 1 { 1 } else { 0 };
-            args[0].blit_into(&mut data, w, 2, y);
-
-            return RenderNode {
-                width: w,
+    fn render(
+        &self,
+        args: &[RenderNode],
+        _opts: &[RenderNode],
+        _ctx: &mut RenderCtx,
+    ) -> RenderNode {
+        // Render a fixed-length integral symbol
+        if args.is_empty() {
+            RenderNode {
+                width: 2, // symbol + space
                 height: 3,
                 baseline: 1,
-                data,
-            };
-        }
+                data: vec!['⎛', ' ', '⎟', ' ', '⎠', ' '],
+            }
+        } else {
+            // no stretching required
+            if args[0].height <= 3 {
+                let w = args[0].width + 2; // symbol + space
+                let mut data = vec![' '; w * 3];
 
-        RenderNode::stretchy_delim_left(&args[0], '⎛', '⎟', '⎠')
+                data[0] = '⎛';
+                data[w] = '⎟';
+                data[2 * w] = '⎠';
+
+                // center one-liner expressions
+                let y = if args[0].height == 1 { 1 } else { 0 };
+                args[0].blit_into(&mut data, w, 2, y);
+
+                return RenderNode {
+                    width: w,
+                    height: 3,
+                    baseline: 1,
+                    data,
+                };
+            }
+
+            RenderNode::stretchy_delim_left(&args[0], '⎛', '⎟', '⎠')
+        }
     }
-}
 }
 
 #[derive(Debug)]
