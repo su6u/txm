@@ -142,6 +142,39 @@ impl RenderNode {
     }
 
     pub fn superscript(base: &Self, exp: &Self) -> Self {
+        // check if we can use special subscript unicode chars for this superscript
+        if exp.height == 1 {
+            let mut converted = Vec::with_capacity(exp.data.len());
+            let mut all_convertible = true;
+
+            for &c in &exp.data {
+                if let Some(sup_c) = to_superscript_char(c) {
+                    converted.push(sup_c);
+                } else {
+                    all_convertible = false;
+                    break;
+                }
+            }
+
+            if all_convertible {
+                let width = base.width + converted.len();
+                let mut data = vec![' '; width * base.height];
+                base.blit_into(&mut data, width, 0, 0);
+
+                let target_row = 0;
+                let dst_start = target_row * width + base.width;
+                let dst_end = dst_start + converted.len();
+                data[dst_start..dst_end].copy_from_slice(&converted);
+
+                return Self {
+                    width,
+                    height: base.height,
+                    baseline: base.baseline,
+                    data,
+                };
+            }
+        }
+
         let height = exp.height + base.height;
         let width = exp.width + base.width;
         let baseline = base.baseline + exp.height;
@@ -158,35 +191,43 @@ impl RenderNode {
         }
     }
 
-    pub fn superscript_digit(base: &Self, digit: char) -> Self {
-        let sup = match digit {
-            '0' => '⁰',
-            '1' => '¹',
-            '2' => '²',
-            '3' => '³',
-            '4' => '⁴',
-            '5' => '⁵',
-            '6' => '⁶',
-            '7' => '⁷',
-            '8' => '⁸',
-            '9' => '⁹',
-            _ => return Self::superscript(base, &Self::from_char(digit)),
-        };
-
-        let width = base.width + 1;
-        let mut data = vec![' '; width * base.height];
-        base.blit_into(&mut data, width, 0, 0);
-        data[base.width] = sup;
-
-        Self {
-            width,
-            height: base.height,
-            baseline: base.baseline,
-            data,
-        }
-    }
-
     pub fn subscript(base: &Self, sub: &Self) -> Self {
+        // check if we can use special subscript unicode chars for this subscript
+        if sub.height == 1 {
+            let mut converted = Vec::with_capacity(sub.data.len());
+            let mut all_convertible = true;
+
+            for c in &sub.data {
+                if let Some(sub_c) = to_subscript_char(*c) {
+                    converted.push(sub_c);
+                } else {
+                    all_convertible = false;
+                    break;
+                }
+            }
+
+            if all_convertible {
+                let width = base.width + converted.len();
+
+                let mut data = vec![' '; width * base.height];
+                base.blit_into(&mut data, width, 0, 0);
+
+                let target_row = base.baseline;
+                let dst_start = target_row * width + base.width;
+                let dst_end = dst_start + converted.len();
+                data[dst_start..dst_end].copy_from_slice(&converted);
+
+                return Self {
+                    width,
+                    height: base.height,
+                    baseline: base.baseline,
+                    data,
+                };
+            }
+        }
+
+        // fallback
+
         let sub_y = base.baseline + 1;
         let height = (sub_y + sub.height).max(base.height);
         let width = base.width + sub.width;
@@ -468,4 +509,39 @@ impl fmt::Display for RenderNode {
 
         Ok(())
     }
+}
+
+#[rustfmt::skip]
+fn to_superscript_char(c: char) -> Option<char> {
+    Some (match c {
+        '0' => '⁰', '1' => '¹', '2' => '²', '3' => '³', '4' => '⁴',
+        '5' => '⁵', '6' => '⁶', '7' => '⁷', '8' => '⁸', '9' => '⁹',
+        'a' => 'ᵃ', 'b' => 'ᵇ', 'c' => 'ᶜ', 'd' => 'ᵈ', 'e' => 'ᵉ',
+        'f' => 'ᶠ', 'g' => 'ᵍ', 'h' => 'ʰ', 'i' => 'ⁱ', 'j' => 'ʲ',
+        'k' => 'ᵏ', 'l' => 'ˡ', 'm' => 'ᵐ', 'n' => 'ⁿ', 'o' => 'ᵒ',
+        'p' => 'ᵖ', 'r' => 'ʳ', 's' => 'ˢ', 't' => 'ᵗ', 'u' => 'ᵘ',
+        'v' => 'ᵛ', 'w' => 'ʷ', 'x' => 'ˣ', 'y' => 'ʸ', 'z' => 'ᶻ',
+        'A' => 'ᴬ', 'B' => 'ᴮ', 'D' => 'ᴰ', 'E' => 'ᴱ', 'G' => 'ᴳ',
+        'H' => 'ᴴ', 'I' => 'ᴵ', 'J' => 'ᴶ', 'M' => 'ᴹ', 'N' => 'ᴺ',
+        'O' => 'ᴼ', 'P' => 'ᴾ', 'R' => 'ᴿ', 'T' => 'ᵀ', 'U' => 'ᵁ',
+        'W' => 'ᵂ', '+' => '⁺', '-' => '⁻', '=' => '⁼', '(' => '⁽',
+        ')' => '⁾',
+
+        _ => return None,
+    })
+}
+
+#[rustfmt::skip]
+fn to_subscript_char(c: char) -> Option<char> {
+    Some(match c {
+        '0' => '₀', '1' => '₁', '2' => '₂', '3' => '₃', '4' => '₄',
+        '5' => '₅', '6' => '₆', '7' => '₇', '8' => '₈', '9' => '₉',
+        'a' => 'ₐ', 'e' => 'ₑ', 'h' => 'ₕ', 'i' => 'ᵢ', 'j' => 'ⱼ',
+        'k' => 'ₖ', 'l' => 'ₗ', 'm' => 'ₘ', 'n' => 'ₙ', 'o' => 'ₒ',
+        'p' => 'ₚ', 'r' => 'ᵣ', 's' => 'ₛ', 't' => 'ₜ', 'u' => 'ᵤ',
+        'v' => 'ᵥ', 'x' => 'ₓ', 'y' => 'ᵧ', '+' => '₊', '-' => '₋', '=' => '₌',
+        '(' => '₍', ')' => '₎',
+
+        _ => return None,
+    })
 }
