@@ -562,7 +562,12 @@ impl RenderNode {
             data,
         };
 
-        Ok(RenderNode::stretchy_delim(&matrix, left_delim, right_delim, true))
+        Ok(RenderNode::stretchy_delim(
+            &matrix,
+            left_delim,
+            right_delim,
+            true,
+        ))
     }
 }
 

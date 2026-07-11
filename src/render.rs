@@ -1,7 +1,7 @@
 use crate::ast::*;
+use crate::error::ParseError;
 use crate::glyph::{RenderCtx, SymbolRegistry};
 use crate::layout::RenderNode;
-use crate::error::ParseError;
 
 pub fn render(
     expr: &Expr,

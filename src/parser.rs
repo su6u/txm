@@ -147,7 +147,11 @@ impl<'a> Parser<'a> {
         // has_limits = true and if the next symbol after parsing scripts
         // was LBrace, it is an argument
 
-        let mut result = if let Expr::Command { name, opts: _, args } = &base
+        let mut result = if let Expr::Command {
+            name,
+            opts: _,
+            args,
+        } = &base
             && let Some(glyph) = self.registry.get(name)
             && glyph.has_limits()
             && self.peek() == Some(&Token::LBrace)
@@ -314,7 +318,9 @@ impl<'a> Parser<'a> {
         self.expect(Token::RBrace);
 
         if !matches!(env_name.as_str(), "matrix" | "bmatrix" | "pmatrix") {
-            return Err(ParseError(format!("unknown matrix environment: {env_name}")));
+            return Err(ParseError(format!(
+                "unknown matrix environment: {env_name}"
+            )));
         }
 
         let body_start = self.pos;

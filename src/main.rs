@@ -39,14 +39,19 @@ fn main() {
     match parse_args() {
         Ok(Cli::Help) => print!("{}", help(&program, &flags)),
         Ok(Cli::Version) => println!("txm {}", env!("CARGO_PKG_VERSION")),
-        Ok(Cli::Run(config)) => {
-            let rendered = txm::render(&config.expression);
-            if config.unboxed {
-                print!("{rendered}");
-            } else {
-                print!("{}", boxed(&rendered));
+        Ok(Cli::Run(config)) => match txm::render(&config.expression) {
+            Ok(rendered) => {
+                if config.unboxed {
+                    print!("{rendered}");
+                } else {
+                    print!("{}", boxed(&rendered));
+                }
             }
-        }
+            Err(e) => {
+                eprintln!("error: {e}");
+                std::process::exit(1);
+            }
+        },
         Err(msg) => {
             eprintln!("error: {msg}");
             eprintln!("{}", help(&program, &flags));
