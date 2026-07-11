@@ -4,7 +4,7 @@ use crate::glyph::SymbolRegistry;
 use crate::token::Token;
 
 pub struct Parser<'a> {
-    tokens: &'a [Token],
+    tokens: &'a [Token<'a>],
     pos: usize,
     registry: &'a SymbolRegistry,
 }
@@ -18,11 +18,11 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn peek(&self) -> Option<&Token> {
+    fn peek(&self) -> Option<&Token<'_>> {
         self.tokens.get(self.pos)
     }
 
-    fn advance(&mut self) -> Token {
+    fn advance(&mut self) -> Token<'_> {
         let t = self.tokens[self.pos].clone();
         self.pos += 1;
         t
@@ -212,12 +212,12 @@ impl<'a> Parser<'a> {
     fn parse_atom(&mut self) -> Result<Expr, ParseError> {
         match self.peek() {
             Some(Token::Number(s)) => {
-                let s = s.clone();
+                let s = s.to_string();
                 self.advance();
                 Ok(Expr::Number(s))
             }
             Some(Token::Ident(s)) => {
-                let s = s.clone();
+                let s = s.to_string();
                 self.advance();
                 Ok(Expr::Ident(s))
             }
@@ -240,7 +240,7 @@ impl<'a> Parser<'a> {
                 Ok(Expr::Brackets(Box::new(inner)))
             }
             Some(Token::Command(name)) => {
-                let name = name.clone();
+                let name = name.to_string();
                 self.advance();
                 if name == "begin" {
                     self.parse_begin()
@@ -249,7 +249,7 @@ impl<'a> Parser<'a> {
                 }
             }
             Some(Token::Escape(s)) => {
-                let s = s.clone();
+                let s = s.to_string();
                 self.advance();
                 Ok(Expr::Escape(s))
             }
@@ -366,7 +366,7 @@ impl<'a> Parser<'a> {
         self.expect(Token::LBrace)?;
         let env_name = match self.peek() {
             Some(Token::Ident(name)) => {
-                let name = name.clone();
+                let name = name.to_string();
                 self.advance();
                 name
             }
@@ -390,11 +390,11 @@ impl<'a> Parser<'a> {
         let end_pos = loop {
             match self.tokens.get(self.pos) {
                 None => return Err(ParseError(format!("unclosed \\begin{{{}}}", env_name))),
-                Some(Token::Command(name)) if name == "begin" => {
+                Some(Token::Command(name)) if *name == "begin" => {
                     depth += 1;
                     self.pos += 1;
                 }
-                Some(Token::Command(name)) if name == "end" => {
+                Some(Token::Command(name)) if *name == "end" => {
                     if depth == 0 {
                         break self.pos;
                     }
@@ -412,20 +412,23 @@ impl<'a> Parser<'a> {
 
         self.advance();
         self.expect(Token::LBrace)?;
+
         let end_name = match self.peek() {
             Some(Token::Ident(name)) => {
-                let name = name.clone();
+                let name = name.to_string();
                 self.advance();
                 name
             }
             _ => return Err(ParseError("expected environment name in \\end{...}".into())),
         };
-        if end_name != env_name {
+
+        if *end_name != env_name {
             return Err(ParseError(format!(
                 "mismatched \\begin{{{}}} and \\end{{{}}}",
                 env_name, end_name
             )));
         }
+
         self.expect(Token::RBrace)?;
 
         Ok(Expr::Matrix {
@@ -445,14 +448,14 @@ impl<'a> Parser<'a> {
             match token {
                 Token::LBrace | Token::LBracket | Token::LParen => depth += 1,
                 Token::RBrace | Token::RBracket | Token::RParen => depth = depth.saturating_sub(1),
-                Token::Command(name) if name == "begin" => env_depth += 1,
-                Token::Command(name) if name == "end" => env_depth = env_depth.saturating_sub(1),
+                Token::Command(name) if *name == "begin" => env_depth += 1,
+                Token::Command(name) if *name == "end" => env_depth = env_depth.saturating_sub(1),
                 Token::Ampersand if depth == 0 && env_depth == 0 => {
                     let cell = self.parse_tokens(&tokens[cell_start..i])?;
                     current_row.push(cell);
                     cell_start = i + 1;
                 }
-                Token::Escape(s) if s == "\\" && depth == 0 && env_depth == 0 => {
+                Token::Escape(s) if *s == "\\" && depth == 0 && env_depth == 0 => {
                     let cell = self.parse_tokens(&tokens[cell_start..i])?;
                     current_row.push(cell);
                     rows.push(current_row);

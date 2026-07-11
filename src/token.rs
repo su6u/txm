@@ -3,7 +3,7 @@ use logos::Logos;
 use crate::error::ParseError;
 
 #[derive(Logos, Debug, Clone, PartialEq)]
-pub enum Token {
+pub enum Token<'a> {
     #[token("{")]
     LBrace,
     #[token("}")]
@@ -52,24 +52,24 @@ pub enum Token {
     #[token("&")]
     Ampersand,
 
-    #[regex(r"\\[a-zA-Z]+", |lex| lex.slice()[1..].to_string())]
-    Command(String),
+    #[regex(r"\\[a-zA-Z]+", |lex| &lex.slice()[1..])]
+    Command(&'a str),
 
-    #[regex(r"\\[^a-zA-Z]", |lex| lex.slice()[1..].to_string())]
-    Escape(String),
+    #[regex(r"\\[^a-zA-Z]", |lex| &lex.slice()[1..])]
+    Escape(&'a str),
 
-    #[regex(r"[0-9]+", |lex| lex.slice().to_string())]
-    Number(String),
+    #[regex(r"[0-9]+")]
+    Number(&'a str),
 
-    //can also be without a capture group but with is a bit nicer
-    #[regex(r"([a-zA-Z]|[^ -~\s])+", |lex| lex.slice().to_string())]
-    Ident(String),
+    // can also be without a capture group but with is a bit nicer
+    #[regex(r"([a-zA-Z]|[^ -~\s])")]
+    Ident(&'a str),
 
     #[regex(r"\s+", logos::skip)]
     Whitespace,
 }
 
-pub fn tokenize(input: &str) -> Result<Vec<Token>, ParseError> {
+pub fn tokenize(input: &str) -> Result<Vec<Token<'_>>, ParseError> {
     Token::lexer(input)
         .spanned()
         .map(|(i, span)| i.map_err(|_| ParseError::from_range(span)))

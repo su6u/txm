@@ -166,7 +166,7 @@ fn build_registry() -> SymbolRegistry {
         r.register(cmd, UnicodeGlyph(ch));
     }
 
-    r.register("|", AbsGlyph);
+    r.register("abs", AbsGlyph);
 
     for (cmd, map) in [
         ("mathbf", to_bold as fn(char) -> char),
