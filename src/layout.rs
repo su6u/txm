@@ -422,8 +422,8 @@ impl RenderNode {
 
         data[1] = '┌';
 
-        for x in 2..w {
-            data[x] = '─';
+        for item in data.iter_mut().take(w).skip(2) {
+            *item = '─';
         }
 
         for y in 1..h {

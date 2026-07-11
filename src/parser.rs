@@ -185,7 +185,11 @@ impl<'a> Parser<'a> {
             self.expect(Token::RBrace)?;
             args.push(body);
 
-            Expr::Command { name, opts: Vec::new(), args }
+            Expr::Command {
+                name,
+                opts: Vec::new(),
+                args,
+            }
         } else {
             base
         };
