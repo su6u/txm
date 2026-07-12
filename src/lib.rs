@@ -192,6 +192,7 @@ fn build_registry() -> SymbolRegistry {
     }
 
     r.register("abs", AbsGlyph);
+    // |x| parses as "|" but only abs was registered so it just printed |
     r.register("|", AbsGlyph);
 
     for (cmd, map) in [
